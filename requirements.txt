@@ -1,0 +1,6 @@
+jarvis-tools
+sklearn
+matminer
+forestci
+plotly
+torch
