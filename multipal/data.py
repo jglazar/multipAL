@@ -7,17 +7,9 @@ Such methods need not be called, so that those without Plotly Express installed 
 import pandas as pd
 import numpy as np
 
-import warnings
-
 import os.path
 
 from sklearn.manifold import TSNE
-from sklearn.ensemble import RandomForestRegressor
-import forestci as fci
-from scipy.stats import norm
-
-import multiprocessing
-from joblib import Parallel, delayed
 
 __author__ = "James T. Glazar, Nathan C. Frey"
 __copyright__ = "MIT License"
