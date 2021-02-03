@@ -104,7 +104,7 @@ class Data:
     
     if inplace:
       self.df = out_df
-     else:
+    else:
       return out_df
   
   def combine_props(self, way='multiply', inplace=True):
