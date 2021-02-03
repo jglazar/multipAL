@@ -9,8 +9,6 @@ import numpy as np
 
 import warnings
 
-import os.path
-
 from sklearn.ensemble import RandomForestRegressor
 import forestci as fci
 from scipy.stats import norm
