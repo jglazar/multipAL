@@ -270,13 +270,6 @@ class Data:
     
 class JarvisPTData(Data):
 
-  from jarvis.core.atoms import Atoms
-  from jarvis.analysis.structure.spacegroup import Spacegroup3D
-  from matminer.featurizers.structure import JarvisCFID
-  from matminer.featurizers.composition import ElectronegativityDiff
-  from pymatgen.core.composition import Composition
-  from pymatgen.core.molecular_orbitals import MolecularOrbitals
-
   def __init__(self, ftrs_list=['avg_mass', 'sym_elem', 'max_en_diff', 'pd_diff_div_val', 'sp_diff_div_val'], 
                      prop_list=['dfpt_piezo_max_eij', 'spillage'],
                      custom_df_file='/home/james/Downloads/piezo_ti/custom_df.pkl'):
@@ -300,7 +293,13 @@ class JarvisPTData(Data):
       None
     
     '''
-    
+        
+    from jarvis.core.atoms import Atoms
+    from jarvis.analysis.structure.spacegroup import Spacegroup3D
+    from matminer.featurizers.structure import JarvisCFID
+    from matminer.featurizers.composition import ElectronegativityDiff
+    from pymatgen.core.composition import Composition
+    from pymatgen.core.molecular_orbitals import MolecularOrbitals
     super().__init__(ftrs_list, prop_list)
     self.custom_df_file = custom_df_file
     self.featurize()
