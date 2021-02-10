@@ -316,7 +316,7 @@ class JarvisPTData(Data):
       None (edits self.df)
     '''
     
-    cols = ['id', 'formula'] + self.ftrs_list + self.prop_list
+    cols = ['id', 'formula', 'atoms'] + self.ftrs_list + self.prop_list
     known_df = pd.read_pickle( self.custom_df_file )
     out_df = known_df[ cols ]
     unknown_df = self.df[ ~self.df['id'].isin( known_df['id'] )  ]
@@ -386,7 +386,7 @@ class JarvisPTData(Data):
       unknown_df['avg_mass'] = unknown_df['atoms'].apply( avg_mass ).fillna(0)
 
     # return only the desired information
-      out_df = out_df.append( unknown_df[ ['id', 'formula'] + self.ftrs_list + self.prop_list ], ignoreindex=True )
+      out_df = out_df.append( unknown_df[ cols ], ignoreindex=True )
     
     self.df = out_df
    
