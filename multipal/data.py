@@ -11,6 +11,13 @@ import os.path
 
 from sklearn.manifold import TSNE
 
+from jarvis.core.atoms import Atoms
+from jarvis.analysis.structure.spacegroup import Spacegroup3D
+from matminer.featurizers.structure import JarvisCFID
+from matminer.featurizers.composition import ElectronegativityDiff
+from pymatgen.core.composition import Composition
+from pymatgen.core.molecular_orbitals import MolecularOrbitals
+
 __author__ = "James T. Glazar, Nathan C. Frey"
 __copyright__ = "MIT License"
 __version__ = "0.0.1"
@@ -293,13 +300,7 @@ class JarvisPTData(Data):
       None
     
     '''
-        
-    from jarvis.core.atoms import Atoms
-    from jarvis.analysis.structure.spacegroup import Spacegroup3D
-    from matminer.featurizers.structure import JarvisCFID
-    from matminer.featurizers.composition import ElectronegativityDiff
-    from pymatgen.core.composition import Composition
-    from pymatgen.core.molecular_orbitals import MolecularOrbitals
+    
     super().__init__(ftrs_list, prop_list)
     self.custom_df_file = custom_df_file
     self.featurize()
@@ -363,6 +364,8 @@ class JarvisPTData(Data):
       
       unknown_df['max_en_diff'] = comp.apply(lambda x: en(x))
 
+      jrvs = JarvisCFID()
+      
       # electron fillings
       def electron_tot(x, orbital):
         ''' helper function used to apply to pandas Series '''
