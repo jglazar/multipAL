@@ -134,31 +134,43 @@ class AL:
     # make sure original dataframe isn't edited
     al_df = df.copy()  
     ids = [] 
+    props = []
     
     for i in range(n_steps):
       al_df['pred'], al_df['unc'] = self.predict( al_df ) 
       id_added = self.acquire( al_df, aq=aq )
       al_df = self.update(id_added, al_df)  # update AL dataframe with new info, if needed 
-      ids.append( id_added )
       al_df.at[ al_df['id']==id_added, 'train'] = 1  
+      ids.append( id_added )
+      props.append( al_df[ al_df['id']==id_added][self.prop] )
     
-    return ids
+    return ids, props
   
-  def improv(self, al_df, ids):
+  def improv(self, start_df, props):
     '''
     Calculate improvement of active learning loop given starting DataFrame and list of IDs selected.
     Currently under construction.
     
     Args:
-      al_df (DataFrame): starting active learning DataFrame with initial training set
+      start_df (DataFrame): starting active learning DataFrame with initial training set
       ids (list): ID numbers of materials selected by the active learning loop
     
     Returns:
       improv (list): improvement from 0 (no improvement over starting set) to 1 (found best possible material) to track active learning
     '''
-    pass
-
-
+    
+    improv = []
+    start = start_df[ start_df.train==1 ][ self.prop ].max()
+    best  = max( start_df[ self.prop ].max(), max(props) )
+    
+    for i in range(len(props)):
+       improv.append( (props[:i+1].max() - start) / (best - start) )
+     
+    # get rid of "negative improvement," which is nonsensical 
+    improv = [0 if i<0 else i for i in improv]
+     
+    return improv 
+     
 class JarvisAL( AL ):
   def __init__(self, data, prop):
     '''
@@ -225,16 +237,9 @@ class JarvisAL( AL ):
       job_list = Parallel(n_jobs=num_cores)(delayed(self.al)( self.df_setup(train_size=train_size, top_res_pct=top_res_pct, seed=j), aq=aq, n_steps=n_steps) for j in jobs )
     
     for j in jobs:
-      al_df = self.df_setup(train_size=train_size, top_res_pct=top_res_pct, seed=j)
-      start = al_df[ al_df.train==1 ][self.prop].max()
-      best  = al_df[ self.prop ].max()
-      ids = job_list[j]
-      
-      for i in range(len(ids)):
-        improv_mat[j][i] = (al_df.loc[al_df['id'].isin(ids[:i+1])][self.prop].max() - start) / (best - start)      
-    
-    # get rid of "negative improvement," which is nonsensical 
-    improv_mat[ improv_mat < 0 ] = 0  
+      start_df = self.df_setup(train_size=train_size, top_res_pct=top_res_pct, seed=j)
+      props = job_list[j][1]
+      improv_mat[j] = self.improv( start_df, props )
     
     return improv_mat  
 
