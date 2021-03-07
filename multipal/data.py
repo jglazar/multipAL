@@ -1,7 +1,7 @@
 '''
 This module contains classes for storing machine learning data.
 Each class has visualization methods that use the Plotly Express package. 
-Such methods need not be called, so that those without Plotly Express installed may still use multipAL
+Such methods need not be called, so that multipal may be used without Plotly Express installed.
 '''
 
 import pandas as pd
