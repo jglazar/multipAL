@@ -16,6 +16,12 @@ from scipy.stats import norm
 import multiprocessing
 from joblib import Parallel, delayed
 
+import os
+from jarvis.core.atoms import Atoms
+from jarvis.io.vasp.inputs import Poscar
+from jarvis.tasks.vasp.vasp import JobFactory
+from jarvis.analysis.topological.spillage import Spillage
+
 __author__ = "James T. Glazar, Nathan C. Frey"
 __copyright__ = "MIT License"
 __version__ = "0.0.1"
@@ -351,6 +357,36 @@ class VaspAL( AL ):
     '''
     
     out_df = al_df.copy()
-    out_df.at[ out_df['id']==id_added, self.prop] = out_df[ out_df['id']==id_added ]['id'] / 10000.0
+    os.environ['VASP_PSP_DIR'] = '/home/jglazar/potcar'
+    atom = Atoms.from_dict( out_df[ out_df['id']==id_added]['atoms'].values[0] )
+
+    if self.prop == 'spillage':
+      my_j_fac = JobFactory(
+                            poscar = Poscar(atom, comment=str(id_added)),
+                            vasp_cmd = "mpirun vasp_std",
+                            optional_params = { 
+                           "kppa": 1000,
+                           "encut": 500,
+                           "kpleng": 20,
+                           "line_density": 20,
+                           "nbands": 32*2, 
+                           "run_wannier":False,
+                           "extension":""
+                            },
+                           steps = ['ENCUT', 'KPLEN', 'RELAX', 'BANDSTRUCT']
+                           )
+      # run basic calculations / convergences
+      my_j_fac.step_flow()
+
+      # run non-collinear VASP for SOC calculations
+      my_j_fac.vasp_cmd = "mpirun vasp_ncl"
+      my_soc_job = my_j_fac.soc_spillage(mat=my_j_fac.mat,
+                                       encut=my_j_fac.optional_params["encut"],
+                                       nbands=None,
+                                       kppa=my_j_fac.optional_params["kppa"])[0]
+      spl = Spillage(wf_noso='MAIN-MAGSCFBAND-'+str(id_added)+'/WAVECAR', wf_so='MAIN-SOCSCFBAND-'+str(id_added)+'/WAVECAR')
+      info = spl.overlap_so_spinpol()
+      prop_val = float( info['spillage'] )
+
+    out_df.at[ out_df['id']==id_added, self.prop] = prop_val
     return out_df
-    

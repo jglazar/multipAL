@@ -28,7 +28,7 @@ __date__ = "Feb 2021"
 
 
 class Data:
-  def __init__(self, ftrs_list, prop_list, main_df_file = '/home/james/Downloads/piezo_ti/main_df.pkl'):
+  def __init__(self, ftrs_list, prop_list, main_df_file = '/scratch/vshenoy1/jglazar/multipal/main_df.pkl'):
     '''
     Carries the dataframe used for machine learning.
     Can create a custom subclass generating the features and properties of interest. Simply write a subclass of Data with a custom `featurize` method.
@@ -279,10 +279,10 @@ class JarvisPTData(Data):
 
   def __init__(self, ftrs_list=['avg_mass', 'sym_elem', 'max_en_diff', 'pd_diff_div_val', 'sp_diff_div_val'], 
                      prop_list=['dfpt_piezo_max_eij', 'spillage'],
-                     custom_df_file='/home/james/Downloads/piezo_ti/custom_df.pkl'):
+                     custom_df_file='/scratch/vshenoy1/jglazar/multipal/custom_df.pkl'):
     '''
     Subclass of Data, specifically for exploring piezoelectricity and topology using the JARVIS database.
-    
+
     Args:
       ftrs_list (list): list of features for machine learning
       prop_list(list): list of properties to predict/study
@@ -300,7 +300,7 @@ class JarvisPTData(Data):
       None
     
     '''
-    
+
     super().__init__(ftrs_list, prop_list)
     self.custom_df_file = custom_df_file
     self.featurize()
@@ -318,13 +318,12 @@ class JarvisPTData(Data):
     '''
     
     cols = ['id', 'formula', 'atoms'] + self.ftrs_list + self.prop_list
-    known_df = pd.read_pickle( self.custom_df_file )
-    out_df = known_df[ cols ]
-    unknown_df = self.df[ ~self.df['id'].isin( known_df['id'] )  ]
-    
-    if len( unknown_df ) > 0:
+    if os.path.isfile( self.custom_df_file ):
+      out_df = pd.read_pickle( self.custom_df_file )
+    else:
     # create custom features
     # create structural data (takes a while)
+      unknown_df = self.df.copy()
       unknown_df['struct_data'] = unknown_df['atoms'].apply( lambda x: Spacegroup3D(Atoms.from_dict(x)).spacegroup_data() )
       unknown_df['formula'] = unknown_df['atoms'].apply(lambda x: Atoms.from_dict(x).composition.reduced_formula)
 
@@ -365,7 +364,7 @@ class JarvisPTData(Data):
       unknown_df['max_en_diff'] = comp.apply(lambda x: en(x))
 
       jrvs = JarvisCFID()
-      
+
       # electron fillings
       def electron_tot(x, orbital):
         ''' helper function used to apply to pandas Series '''
@@ -389,7 +388,9 @@ class JarvisPTData(Data):
       unknown_df['avg_mass'] = unknown_df['atoms'].apply( avg_mass ).fillna(0)
 
     # return only the desired information
-      out_df = out_df.append( unknown_df[ cols ], ignoreindex=True )
+      #out_df = out_df.append( unknown_df[ cols ], ignoreindex=True )
+      out_df = unknown_df
+      out_df.to_pickle(self.custom_df_file)      
     
-    self.df = out_df
+    self.df = out_df[cols]
    
