@@ -363,15 +363,15 @@ class VaspAL( AL ):
     if self.prop == 'spillage':
       my_j_fac = JobFactory(
                             poscar = Poscar(atom, comment=str(id_added)),
-                            vasp_cmd = "mpirun vasp_std",
+                            vasp_cmd = 'mpirun vasp_std',
                             optional_params = { 
-                           "kppa": 1000,
-                           "encut": 500,
-                           "kpleng": 20,
-                           "line_density": 20,
-                           "nbands": 32*2, 
-                           "run_wannier":False,
-                           "extension":""
+                           'kppa': 1000,
+                           'encut': 500,
+                           'kpleng': 20,
+                           'line_density': 20,
+                           'nbands': 32*2, 
+                           'run_wannier':False,
+                           'extension':''
                             },
                            steps = ['ENCUT', 'KPLEN', 'RELAX', 'BANDSTRUCT']
                            )
@@ -379,11 +379,11 @@ class VaspAL( AL ):
       my_j_fac.step_flow()
 
       # run non-collinear VASP for SOC calculations
-      my_j_fac.vasp_cmd = "mpirun vasp_ncl"
+      my_j_fac.vasp_cmd = 'mpirun vasp_ncl'
       my_soc_job = my_j_fac.soc_spillage(mat=my_j_fac.mat,
-                                       encut=my_j_fac.optional_params["encut"],
-                                       nbands=None,
-                                       kppa=my_j_fac.optional_params["kppa"])[0]
+                                         encut=my_j_fac.optional_params["encut"],
+                                         nbands=None,
+                                         kppa=my_j_fac.optional_params["kppa"])[0]
       spl = Spillage(wf_noso='MAIN-MAGSCFBAND-'+str(id_added)+'/WAVECAR', wf_so='MAIN-SOCSCFBAND-'+str(id_added)+'/WAVECAR')
       info = spl.overlap_so_spinpol()
       prop_val = float( info['spillage'] )
