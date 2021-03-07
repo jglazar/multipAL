@@ -1,4 +1,4 @@
-jarvis-tools = 2020.9.22
+jarvis-tools = 2020.12.24
 sklearn = 0.0
 pandas = 1.0.5
 numpy = 1.18.5
