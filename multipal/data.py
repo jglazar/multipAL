@@ -249,6 +249,7 @@ class Data:
     '''
     
     import plotly.express as px
+    import matplotlib
     
     # animate TSNE map to show each material being selected in order by the active learning search
     Writer = animation.writers['pillow']
@@ -323,9 +324,9 @@ class JarvisPTData(Data):
     else:
     # create custom features
     # create structural data (takes a while)
-      unknown_df = self.df.copy()
-      unknown_df['struct_data'] = unknown_df['atoms'].apply( lambda x: Spacegroup3D(Atoms.from_dict(x)).spacegroup_data() )
-      unknown_df['formula'] = unknown_df['atoms'].apply(lambda x: Atoms.from_dict(x).composition.reduced_formula)
+      out_df = self.df.copy()
+      out_df['struct_data'] = out_df['atoms'].apply( lambda x: Spacegroup3D(Atoms.from_dict(x)).spacegroup_data() )
+      out_df['formula'] = out_df['atoms'].apply(lambda x: Atoms.from_dict(x).composition.reduced_formula)
 
       # size of highest point group
       sym_dict = {'1':1, 
@@ -339,20 +340,20 @@ class JarvisPTData(Data):
           '6/mmm':24, 'm-3':24, '432':24, '-43m':24, 
           'm-3m':48
           }
-      unknown_df['sym_elem'] = unknown_df.struct_data.apply( lambda x: x._dataset['pointgroup'] )
-      unknown_df['sym_elem'].replace(sym_dict, inplace=True)
+      out_df['sym_elem'] = out_df.struct_data.apply( lambda x: x._dataset['pointgroup'] )
+      out_df['sym_elem'].replace(sym_dict, inplace=True)
 
       # space group number
-      unknown_df['space_group'] = unknown_df.struct_data.apply( lambda x: x._dataset['number'] )
+      out_df['space_group'] = out_df.struct_data.apply( lambda x: x._dataset['number'] )
 
       # crystal system number
-      unknown_df['crystal_system'] = 0
+      out_df['crystal_system'] = 0
       for ind, bounds in enumerate( [ (1,2), (3,15), (16,74), (75,142), (143,167), (168,194), (195,230) ] ):
-        unknown_df['crystal_system'] = np.where( unknown_df['space_group'].between(bounds[0], bounds[1]), ind+1, unknown_df['crystal_system'] )
+        out_df['crystal_system'] = np.where( out_df['space_group'].between(bounds[0], bounds[1]), ind+1, out_df['crystal_system'] )
 
       # electronegativity difference
       elneg = ElectronegativityDiff()
-      comp = unknown_df['formula'].apply( Composition ).apply( Composition.add_charges_from_oxi_state_guesses )
+      comp = out_df['formula'].apply( Composition ).apply( Composition.add_charges_from_oxi_state_guesses )
       
       def en(x):
         ''' helper function used to apply to pandas Series '''
@@ -361,7 +362,7 @@ class JarvisPTData(Data):
         except:
           return 0.0  # elneg.featurize throws error if atoms' oxidation states = 0
       
-      unknown_df['max_en_diff'] = comp.apply(lambda x: en(x))
+      out_df['max_en_diff'] = comp.apply(lambda x: en(x))
 
       jrvs = JarvisCFID()
 
@@ -371,26 +372,23 @@ class JarvisPTData(Data):
         return sum( [jrvs.el_chem_json[i][orbital] for i in x['elements'] if jrvs.el_chem_json[i][orbital] != 0] )
       
       for orb in [ 'nsvalence', 'npvalence', 'ndvalence', 'nfvalence' ]:
-        unknown_df[orb] = unknown_df['atoms'].apply( electron_tot, orbital=orb ).fillna(0)
+        out_df[orb] = out_df['atoms'].apply( electron_tot, orbital=orb ).fillna(0)
       
-      unknown_df['num_atoms'] = unknown_df['atoms'].apply( lambda x: len( x['elements'] ) ).fillna(0)
-      unknown_df['num_val'] = unknown_df['nsvalence'] + unknown_df['npvalence'] + unknown_df['ndvalence'] + unknown_df['nfvalence'] 
-      unknown_df['pd_diff_div_atoms'] = (unknown_df['ndvalence'] - unknown_df['npvalence']) / unknown_df['num_atoms']
-      unknown_df['sp_diff_div_atoms'] = (unknown_df['npvalence'] - unknown_df['nsvalence']) / unknown_df['num_atoms']
-      unknown_df['pd_diff_div_val']   = (unknown_df['ndvalence'] - unknown_df['npvalence']) / unknown_df['num_val']
-      unknown_df['sp_diff_div_val']   = (unknown_df['npvalence'] - unknown_df['nsvalence']) / unknown_df['num_val']
+      out_df['num_atoms'] = out_df['atoms'].apply( lambda x: len( x['elements'] ) ).fillna(0)
+      out_df['num_val'] = out_df['nsvalence'] + out_df['npvalence'] + out_df['ndvalence'] + out_df['nfvalence'] 
+      out_df['pd_diff_div_atoms'] = (out_df['ndvalence'] - out_df['npvalence']) / out_df['num_atoms']
+      out_df['sp_diff_div_atoms'] = (out_df['npvalence'] - out_df['nsvalence']) / out_df['num_atoms']
+      out_df['pd_diff_div_val']   = (out_df['ndvalence'] - out_df['npvalence']) / out_df['num_val']
+      out_df['sp_diff_div_val']   = (out_df['npvalence'] - out_df['nsvalence']) / out_df['num_val']
 
       # average atomic mass
       def avg_mass(x):
         ''' helper function used to apply to pandas Series '''
         return np.mean( [ jrvs.el_chem_json[i]['atom_mass'] for i in x['elements'] ] )
       
-      unknown_df['avg_mass'] = unknown_df['atoms'].apply( avg_mass ).fillna(0)
+      out_df['avg_mass'] = out_df['atoms'].apply( avg_mass ).fillna(0)
 
     # return only the desired information
-      #out_df = out_df.append( unknown_df[ cols ], ignoreindex=True )
-      out_df = unknown_df
       out_df.to_pickle(self.custom_df_file)      
     
     self.df = out_df[cols]
-   
