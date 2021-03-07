@@ -319,14 +319,12 @@ class VaspAL( AL ):
     Attributes:
       data (Data): Data object that holds DataFrame for active learning
       prop (string): Name of property to maximize
-      al_df (DataFrame): lone DataFrame used for active learning search
 
     Returns:
       None
     '''
     
     super().__init__(data, prop)
-    self.df_setup()
 
   def df_setup(self):
     '''
@@ -336,13 +334,15 @@ class VaspAL( AL ):
       None
     
     Returns:
-      None (creates self.al_df)
+      out_df (DataFrame): Edited self.df DataFrame with 'train' column indicating training set     
     '''
 
-    self.al_df = self.data.df.copy()
-    self.al_df['train'] = 0
-    self.al_df.at[ self.al_df[self.prop].notna(), 'train'] = 1
-  
+    out_df = self.data.df.copy()
+    out_df['train'] = 0
+    out_df.at[ self.al_df[self.prop].notna(), 'train'] = 1
+    
+    return out_df  
+
   def update(self, id_added, al_df):
     '''
     Calculates material's property after it is selected.
