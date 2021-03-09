@@ -8,6 +8,6 @@ First, make sure the dependencies are installed with the correct versions. You c
 
 Second, overwrite the `vasp.py` in your environment's `.../lib/python3.8/site-packages/jarvis/tasks/vasp/` directory with the `vasp.py` file provided in the `extras/` directory. This fixes a few issues with the default VASP settings.
 
-You're now ready to use the `multipal` package! Please follow the tutorials in `tests/` to learn more about what the package can do, and how to use it.
+You're now ready to use the `multipal` package! Please follow the tutorials in `examples/` to learn more about what the package can do, and how to use it.
 
 This code is made available under the MIT License.
