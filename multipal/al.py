@@ -378,7 +378,7 @@ class VaspAL( AL ):
                            'run_wannier':False,
                            'extension':''
                             },
-                           steps = ['ENCUT', 'KPLEN', 'RELAX', 'BANDSTRUCT']
+                           steps = ['RELAX', 'BANDSTRUCT']
                            )
       # run basic calculations / convergences
       my_j_fac.step_flow()
